@@ -1,0 +1,131 @@
+# shortcut to this dotfiles path is $ZSH
+export ZSH=$HOME/.dotfiles
+
+# your project folder that we can `c [tab]` to
+export PROJECTS=~/Code
+
+# use .localrc for SUPER SECRET CRAP that you don't
+# want in your public, versioned repo.
+if [[ -a ~/.localrc ]]
+then
+  source ~/.localrc
+fi
+
+# all of our zsh files
+typeset -U config_files
+config_files=($ZSH/**/*.zsh)
+
+# load the path files
+for file in ${(M)config_files:#*/path.zsh}
+do
+  source $file
+done
+
+# load everything but the path and completion files
+for file in ${${config_files:#*/path.zsh}:#*/completion.zsh}
+do
+  source $file
+done
+
+# initialize autocomplete here, otherwise functions won't be loaded
+autoload -U compinit
+compinit
+
+# load every completion after autocomplete loads
+for file in ${(M)config_files:#*/completion.zsh}
+do
+  source $file
+done
+
+unset config_files
+
+# direnv
+eval "$(direnv hook zsh)"
+
+# bundle aliases
+
+alias be="bundle exec"
+alias ber="bundle exec rake"
+alias bi="bundle install"
+
+# plain-utils bash_completion
+. ~/code/plain-utils/etc/bash_completion
+
+# docker-compose aliases
+
+alias dcp="docker-compose"
+alias dcpr="docker-compose run --rm"
+
+# plain-utils aliases
+
+alias nfp-prod='plain-utils run nfp-api-prod /bin/bash'
+alias nfp-stag='plain-utils run nfp-api-stag /bin/bash'
+alias supporter-prod='plain-utils run supporter-prod /bin/bash'
+alias supporter-stag='plain-utils run supporter-staging /bin/bash'
+alias plain-prod='plain-utils ssh production admin'
+alias plain-stag='plain-utils ssh staging admin'
+alias nfp-prod-console='plain-utils run nfp-api-prod bin/rails c'
+alias nfp-stag-console='plain-utils run nfp-api-stag bin/rails c'
+alias supporter-prod-console='plain-utils run supporter-prod bin/rails c'
+alias supporter-stag-console='plain-utils run supporter-staging bin/rails c'
+
+# kill all merged branches
+clean_branches() {
+  git fetch --prune
+  git branch --merged | grep --color=auto --exclude-dir={.bzr,.cvs,.git,.hg,.svn} -v "\*" | xargs -n 1 git branch -d
+}
+
+# open my program notes
+sbns() {
+  subl ~/Documents/program_notes/
+}
+
+cop() {
+  ~/Code/heroix/bin/cop
+}
+
+# ssh
+ssh-add ~/.ssh/id_rsa
+
+# dinghy
+#export DOCKER_HOST=tcp://192.168.99.100:2376
+#export DOCKER_CERT_PATH=/Users/leonf/.docker/machine/machines/dinghy
+#export DOCKER_TLS_VERIFY=1
+#export DOCKER_MACHINE_NAME=dinghy
+
+# git log
+function git-log() {
+  git log -M40 --pretty=format:'%Cred%h%Creset%C(yellow)%d%Creset %s %C(green bold)- %an %C(black bold)%cd (%cr)%Creset' --abbrev-commit --date=short "$@"
+}
+function glgg() {
+  if [[ $# == 0 ]] && git rev-parse @{u} &> /dev/null; then
+    git-log --graph @{u} HEAD
+  else
+    git-log --graph "$@"
+  fi
+}
+alias gl='glgg $(git show-ref | cut -d " " -f 2 | grep -v stash$) HEAD'
+
+export PATH="/usr/local/opt/coreutils/libexec/gnubin:$PATH"
+export PATH="/Users/leonf/Code/plain-utils/bin:$PATH"
+export PATH="/Users/leonf/Code/configure/bin:$PATH"
+
+widgets() {
+ulimit -n 2048
+cd ~/code/react-widgets/
+export AWS_KEY=AKIAJPGLQG6SGMXGI7PA
+export AWS_SECRET=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
+}
+#$(boot2docker shellinit)
+
+source ~/.nvm/nvm.sh
+
+### Added by the Heroku Toolbelt
+export PATH="/usr/local/heroku/bin:$PATH"
+source ~/.fresh/build/shell.sh
+
+### kiex
+test -s "$HOME/.kiex/scripts/kiex" && source "$HOME/.kiex/scripts/kiex"
+
+### dvm
+[[ -s "$(brew --prefix dvm)/dvm.sh" ]] && source "$(brew --prefix dvm)/dvm.sh"
